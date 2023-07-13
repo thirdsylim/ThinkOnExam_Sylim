@@ -23,3 +23,30 @@
 //
 // -- This will overwrite an existing command --
 // Cypress.Commands.overwrite('visit', (originalFn, url, options) => { ... })
+import contactAppPage from '../pages/contact-app'
+
+Cypress.Commands.add('updateEntry', (rowIndex, newData, confirm=true) => {
+    Object.entries(newData).map(([column, value]) => {
+        const columnIndex = contactAppPage.indexForColumn(contactAppPage.fieldPlaceholders[column])
+        cy.get(`tr:nth-child(${rowIndex}) > td:nth-child(${columnIndex}) > input`).clear()
+        cy.get(`tr:nth-child(${rowIndex}) > td:nth-child(${columnIndex}) > input`).type(value)
+    })
+    if(confirm) {
+        contactAppPage.buttonWithName('update').click()
+    }
+})
+
+Cypress.Commands.add('addEntry', (data) => {
+    Object.entries(data).map(([column, value]) => {
+        contactAppPage.fieldWithPlaceHolder(contactAppPage.fieldPlaceholders[column]).type(value)    
+    })
+    contactAppPage.buttonWithName('add').click()
+})
+
+Cypress.Commands.add('verifyRow', (rowIndex, data) => {
+    Object.entries(data).map(([column, value]) => {
+        cy.log(Object.entries(contactAppPage.fieldPlaceholders))
+        const columnIndex = contactAppPage.indexForColumn(contactAppPage.fieldPlaceholders[column])
+        cy.get(`tbody > tr:nth-child(${rowIndex}) > td:nth-child(${columnIndex})`).should('have.text', value)
+    })
+})
