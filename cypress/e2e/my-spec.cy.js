@@ -63,6 +63,32 @@ describe('Test Contact App', () => {
       cy.get('tbody > tr').should('have.length', 1)
       // verify error message
     })
+
+    it('can not add entry with invalid email', () => {
+      const timeStamp = utils.makeTimestamp()
+      const data = { 
+        name: `Add Test ${timeStamp}`,
+        phone : '1234567890',
+        email : `addTest${timeStamp}`
+      }
+      cy.addEntry(data)      
+
+      // error message should be shown
+      cy.get('tbody > tr').should('have.length', 1)
+    })
+
+    it('can not add entry with invalid phone number', () => {
+      const timeStamp = utils.makeTimestamp()
+      const data = { 
+        name: `Add Test ${timeStamp}`,
+        phone : 'abcd12345',
+        email : `addTest${timeStamp}@email.com`
+      }
+      cy.addEntry(data)      
+
+      // error message should be shown
+      cy.get('tbody > tr').should('have.length', 1)
+    })
   })
 
   describe('update entries', () => {
@@ -72,6 +98,7 @@ describe('Test Contact App', () => {
       email : undefined
     }
     let rowIndex
+    let newData
 
     beforeEach(() => {
       const timeStamp = utils.makeTimestamp()
@@ -93,15 +120,15 @@ describe('Test Contact App', () => {
       })
       cy.log(rowIndex)
       contactAppPage.rowWithValue(data.email).xpath('.//button[@name="edit"]').click()
+
+      newData = { 
+        name: `UPDATED New Data Test ${timeStamp}`,
+        phone : '999888777',
+        email : `updateTest.newData${timeStamp}@email.com`
+      }
     })
 
     it('can successfully update an entire entry with valid input', () => {
-      const timeStamp = utils.makeTimestamp()
-      const newData = { 
-        name: `Update Test ${timeStamp}`,
-        phone : '999888777',
-        email : `updateTest${timeStamp}@email.com`
-      }
       cy.updateEntry(rowIndex, newData)
 
       cy.verifyRow(2, newData)
@@ -110,16 +137,30 @@ describe('Test Contact App', () => {
 
     Object.keys(data).map(column => {
       it(`can successfully update an entry when updating only ${column}`, () => {
-        const timeStamp = utils.makeTimestamp()
-        const newData = {}
-        newData[column] = `UPDATED${timeStamp}`
-        cy.updateEntry(rowIndex, newData)
-
         const oldData = data[column]
         data[column] = newData[column]
+        cy.updateEntry(rowIndex, data)
         cy.verifyRow(2,data)
         contactAppPage.rowWithValue(oldData).should('not.exist')
       })
+    })
+
+    it('can not update entry with invalid email', () => {
+      const newData = {
+        email : 'malformedemail'
+      }
+      cy.updateEntry(rowIndex, newData)
+      cy.verifyRow(2,data)
+      contactAppPage.rowWithValue(newData.email).should('not.exist')
+    })
+
+    it('can not update entry with invalid phone number', () => {
+      const newData = {
+        phone : 'abc123'
+      }
+      cy.updateEntry(rowIndex, newData)
+      cy.verifyRow(2,data)
+      contactAppPage.rowWithValue(newData.phone).should('not.exist')
     })
   })
 
